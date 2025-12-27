@@ -133,7 +133,6 @@
             posterBox.classList.add('shimmer');
 
             try {
-                // Добавляем заголовок bypass для localtunnel (как делали для ngrok)
                 const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
                     headers: { 'Bypass-Tunnel-Reminder': 'true' }
                 });
@@ -141,17 +140,31 @@
 
                 if (data.title) {
                     document.getElementById('title').innerText = data.title;
-                    const fullPoster = data.poster ? "https://image.tmdb.org/t/p/w500" + data.poster : "";
                     
-                    posterImg.src = fullPoster;
+                    // Если API прислал постер (например, /abc.jpg)
+                    if (data.poster) {
+                        // Чистим путь от лишних слэшей на всякий случай
+                        const cleanPath = data.poster.startsWith('/') ? data.poster : '/' + data.poster;
+                        // Пробуем загрузить через https
+                        posterImg.src = "https://image.tmdb.org/t/p/w500" + cleanPath;
+                    } else {
+                        posterImg.src = "https://via.placeholder.com/500x750?text=Нет+постера";
+                    }
+                    
                     posterImg.onload = () => {
                         posterImg.style.opacity = '1';
+                        posterBox.classList.remove('shimmer');
+                    };
+
+                    posterImg.onerror = () => {
+                        console.error("Ошибка загрузки изображения");
+                        document.getElementById('title').innerText = data.title + " (Постер заблокирован)";
                         posterBox.classList.remove('shimmer');
                     };
                 }
             } catch (e) {
                 document.getElementById('title').innerText = "Ошибка связи с ПК";
-                console.error(e);
+                posterBox.classList.remove('shimmer');
             }
         }
 
@@ -177,4 +190,5 @@
     </script>
 </body>
 </html>
+
 
