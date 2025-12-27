@@ -34,56 +34,41 @@
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-        // Ссылка на твой ngrok
-        const API_BASE = "https://larviparous-intercondylic-sherilyn.ngrok-free.dev";
-        const userId = tg.initDataUnsafe.user?.id || 802527008;
+    const API_BASE = "https://larviparous-intercondylic-sherilyn.ngrok-free.dev";
+    
+    // Пытаемся достать ID из параметров ссылки, если initData пустой
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = tg.initDataUnsafe.user?.id || urlParams.get('user_id') || 802527008;
 
-        async function loadMovie() {
-            try {
-                const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        // ЭТОТ ЗАГОЛОВОК КРИТИЧЕСКИ ВАЖЕН ДЛЯ NGROK
-                        // Он отключает страницу-предупреждение "Visit Site"
-                        'ngrok-skip-browser-warning': 'true'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Ошибка сервера');
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    document.getElementById('title').innerText = "Фильмы не найдены";
-                    return;
-                }
+    async function loadMovie() {
+        console.log("Загрузка для ID:", userId);
+        try {
+            const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
+            const data = await response.json();
 
+            if (data.title) {
                 document.getElementById('title').innerText = data.title;
-                // Проверяем, есть ли постер, и склеиваем ссылку
-                if (data.poster) {
-                    document.getElementById('poster').src = "https://image.tmdb.org/t/p/w500" + data.poster;
-                    document.getElementById('poster').style.display = "block";
-                } else {
-                    document.getElementById('poster').style.display = "none";
-                }
-                
-            } catch (e) {
-                console.error(e);
-                document.getElementById('title').innerText = "Ошибка соединения с сервером";
+                document.getElementById('poster').src = "https://image.tmdb.org/t/p/w500" + data.poster;
+            } else {
+                document.getElementById('title').innerText = "Фильмов нет";
             }
+        } catch (e) {
+            document.getElementById('title').innerText = "Ошибка сети: проверь ngrok";
         }
+    }
 
-        function vote(type) {
-            // Пока просто визуальный отклик и загрузка нового
-            tg.HapticFeedback.impactOccurred('medium');
-            loadMovie();
-        }
-
-        // Запуск при старте
+    function vote(type) {
+        tg.HapticFeedback.impactOccurred('medium');
         loadMovie();
-    </script>
+    }
+
+    loadMovie();
+</script>
 </body>
 </html>
+
