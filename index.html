@@ -18,14 +18,21 @@
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть приложение на весь экран
+            let tg = window.Telegram.WebApp;
+            tg.expand();
 
-        function sendVote(type) {
-            // Отправляем данные обратно в бот
-            tg.sendData(JSON.stringify({action: type, movie_id: 123}));
-            tg.close(); // Закрываем приложение после выбора (или оставляем)
-        }
+            // Получаем ID пользователя из URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+
+            function sendVote(movieId, type) {
+                // Отправляем результат боту
+                tg.sendData(JSON.stringify({
+                    action: type,
+                    movie_id: movieId,
+                    user_id: userId
+                }));
+            }
     </script>
 </body>
 </html>
