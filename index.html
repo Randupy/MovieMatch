@@ -5,7 +5,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            /* Если переменная от TG пустая, будет использован темный #1c1c1c */
             background: var(--tg-theme-bg-color, #1c1c1c);
             color: var(--tg-theme-text-color, #ffffff);
             font-family: sans-serif;
@@ -38,29 +37,52 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Ссылка на твой ngrok
         const API_BASE = "https://larviparous-intercondylic-sherilyn.ngrok-free.dev";
-        const userId = tg.initDataUnsafe.user?.id || 802527008; // Берем ID из телеграм или тестовый
+        const userId = tg.initDataUnsafe.user?.id || 802527008;
 
         async function loadMovie() {
             try {
-                const response = await fetch(`${API_BASE}/get_movie/${userId}`);
+                const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        // ЭТОТ ЗАГОЛОВОК КРИТИЧЕСКИ ВАЖЕН ДЛЯ NGROK
+                        // Он отключает страницу-предупреждение "Visit Site"
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Ошибка сервера');
+                
                 const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('title').innerText = "Фильмы не найдены";
+                    return;
+                }
+
                 document.getElementById('title').innerText = data.title;
-                document.getElementById('poster').src = "https://image.tmdb.org/t/p/w500" + data.poster;
+                // Проверяем, есть ли постер, и склеиваем ссылку
+                if (data.poster) {
+                    document.getElementById('poster').src = "https://image.tmdb.org/t/p/w500" + data.poster;
+                    document.getElementById('poster').style.display = "block";
+                } else {
+                    document.getElementById('poster').style.display = "none";
+                }
+                
             } catch (e) {
-                document.getElementById('title').innerText = "Контент закончился или ошибка";
+                console.error(e);
+                document.getElementById('title').innerText = "Ошибка соединения с сервером";
             }
         }
 
         function vote(type) {
-            // В будущем здесь будет запрос к API /api/vote
-            // А пока просто грузим следующий фильм для теста
-            loadMovie();
-
-            // Виброотклик (приятная фишка Mini App)
+            // Пока просто визуальный отклик и загрузка нового
             tg.HapticFeedback.impactOccurred('medium');
+            loadMovie();
         }
 
+        // Запуск при старте
         loadMovie();
     </script>
 </body>
