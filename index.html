@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); font-family: sans-serif; text-align: center; }
+        .card { border: 1px solid #ccc; border-radius: 10px; padding: 20px; margin: 20px; }
+        button { padding: 10px 20px; border-radius: 5px; border: none; background: #248bcf; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Tinder Films Mini App</h1>
+    <div id="movie-card" class="card">
+        <img id="movie-poster" src="" style="width: 200px;">
+        <h2 id="movie-title">Загрузка...</h2>
+        <button onclick="sendVote('like')">👍 Лайк</button>
+        <button onclick="sendVote('dislike')">👎 Дизлайк</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Развернуть приложение на весь экран
+
+        function sendVote(type) {
+            // Отправляем данные обратно в бот
+            tg.sendData(JSON.stringify({action: type, movie_id: 123}));
+            tg.close(); // Закрываем приложение после выбора (или оставляем)
+        }
+    </script>
+</body>
+</html>
