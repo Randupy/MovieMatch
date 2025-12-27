@@ -125,28 +125,14 @@
         const urlParams = new URLSearchParams(window.location.search);
         const userId = tg.initDataUnsafe.user?.id || urlParams.get('user_id') || 0;
 
-        async function loadMovie() {
-            const posterImg = document.getElementById('poster');
-            const posterBox = document.getElementById('poster-box');
-            
-            posterImg.style.opacity = '0';
-            posterBox.classList.add('shimmer');
-
-            try {
-                const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
-                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
-                });
-                const data = await response.json();
-
-                if (data.title) {
+        if (data.title) {
                     document.getElementById('title').innerText = data.title;
                     
-                    // Если API прислал постер (например, /abc.jpg)
                     if (data.poster) {
-                        // Чистим путь от лишних слэшей на всякий случай
-                        const cleanPath = data.poster.startsWith('/') ? data.poster : '/' + data.poster;
-                        // Пробуем загрузить через https
-                        posterImg.src = "https://image.tmdb.org/t/p/w500" + cleanPath;
+                        // Теперь мы просим картинку у НАШЕГО сервера, передавая путь в параметрах
+                        // Используем encodeURIComponent на случай странных символов
+                        const proxyUrl = `${API_BASE}/proxy_image?path=${encodeURIComponent(data.poster)}`;
+                        posterImg.src = proxyUrl;
                     } else {
                         posterImg.src = "https://via.placeholder.com/500x750?text=Нет+постера";
                     }
@@ -157,16 +143,11 @@
                     };
 
                     posterImg.onerror = () => {
-                        console.error("Ошибка загрузки изображения");
-                        document.getElementById('title').innerText = data.title + " (Постер заблокирован)";
+                        // Если даже через прокси не вышло
+                        document.getElementById('title').innerText = data.title + " (Ошибка загрузки)";
                         posterBox.classList.remove('shimmer');
                     };
                 }
-            } catch (e) {
-                document.getElementById('title').innerText = "Ошибка связи с ПК";
-                posterBox.classList.remove('shimmer');
-            }
-        }
 
         function vote(type) {
             tg.HapticFeedback.impactOccurred('medium');
@@ -190,5 +171,6 @@
     </script>
 </body>
 </html>
+
 
 
