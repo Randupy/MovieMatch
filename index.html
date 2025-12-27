@@ -6,148 +6,110 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #1c1c1c);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #aaaaaa);
-            --button-color: var(--tg-theme-button-color, #248bcf);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #2c2c2c);
+            --bg-color: var(--tg-theme-bg-color, #0f0f0f);
+            --card-bg: var(--tg-theme-secondary-bg-color, #1e1e1e);
+            --text-main: var(--tg-theme-text-color, #ffffff);
+            --accent: #248bcf;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            align-items: center;
+            color: var(--text-main);
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden; align-items: center;
         }
 
-        /* Контейнер карточки */
-        .card-container {
-            flex: 1;
-            width: 90%;
-            max-width: 400px;
-            margin-top: 20px;
+        .card-stack {
             position: relative;
-            perspective: 1000px;
+            width: 90%;
+            height: 70vh;
+            margin-top: 20px;
         }
 
         .movie-card {
-            width: 100%;
-            height: 85%;
-            background: var(--secondary-bg);
-            border-radius: 24px;
+            position: absolute;
+            inset: 0;
+            background: var(--card-bg);
+            border-radius: 25px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
         }
 
-        .poster-wrapper {
+        .poster-container {
             position: relative;
             flex: 1;
-            overflow: hidden;
         }
 
         #poster {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
 
-        .gradient-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        .gradient {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
         }
 
-        .info {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
+        .movie-info {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 25px;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        .movie-info h2 {
+            margin: 0; font-size: 26px; font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
-        /* Блок кнопок */
         .controls {
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            width: 100%;
-            margin-bottom: 10px;
+            display: flex; gap: 30px; padding: 30px;
         }
 
         .btn {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: transform 0.1s active;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 70px; height: 70px; border-radius: 50%;
+            border: none; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        .btn:active { transform: scale(0.9); }
+        .btn:active { transform: scale(0.85); }
 
-        .btn-dislike { background-color: #ff4757; color: white; }
-        .btn-like { background-color: #2ed573; color: white; }
+        .btn-no { background: #ff4757; }
+        .btn-yes { background: #2ed573; }
 
-        .btn svg { width: 30px; height: 30px; fill: white; }
+        .btn svg { width: 32px; height: 32px; fill: white; }
 
-        /* Состояние загрузки */
-        .loading-overlay {
-            position: absolute;
-            inset: 0;
-            background: var(--secondary-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            border-radius: 24px;
-            display: none;
+        /* Эффект загрузки */
+        .shimmer {
+            background: linear-gradient(90deg, var(--card-bg) 25%, #2a2a2a 50%, var(--card-bg) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
         }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body>
 
-    <div class="card-container">
-        <div id="loader" class="loading-overlay">⌛</div>
+    <div class="card-stack">
         <div class="movie-card" id="card">
-            <div class="poster-wrapper">
-                <img id="poster" src="" alt="">
-                <div class="gradient-overlay"></div>
-                <div class="info">
-                    <h2 id="title">Загрузка...</h2>
+            <div class="poster-container shimmer" id="poster-box">
+                <img id="poster" src="" alt="" style="opacity: 0; transition: 0.3s;">
+                <div class="gradient"></div>
+                <div class="movie-info">
+                    <h2 id="title">Ищем кино...</h2>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button class="btn btn-dislike" onclick="vote('dislike')">
+        <button class="btn btn-no" onclick="vote('dislike')">
             <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
-        <button class="btn btn-like" onclick="vote('like')">
+        <button class="btn btn-yes" onclick="vote('like')">
             <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         </button>
     </div>
@@ -157,54 +119,61 @@
         tg.expand();
         tg.enableClosingConfirmation();
 
+        // ЗАМЕНИ НА СВОЮ ССЫЛКУ ИЗ LOCALTUNNEL (БЕЗ СЛЭША В КОНЦЕ)
         const API_BASE = "https://yummy-tables-dream.loca.lt";
+        
         const urlParams = new URLSearchParams(window.location.search);
         const userId = tg.initDataUnsafe.user?.id || urlParams.get('user_id') || 0;
 
         async function loadMovie() {
-            const loader = document.getElementById('loader');
-            loader.style.display = 'flex';
+            const posterImg = document.getElementById('poster');
+            const posterBox = document.getElementById('poster-box');
             
+            posterImg.style.opacity = '0';
+            posterBox.classList.add('shimmer');
+
             try {
+                // Добавляем заголовок bypass для localtunnel (как делали для ngrok)
                 const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
-                    headers: { 'ngrok-skip-browser-warning': 'true' }
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
                 });
                 const data = await response.json();
 
                 if (data.title) {
                     document.getElementById('title').innerText = data.title;
-                    const posterPath = data.poster ? "https://image.tmdb.org/t/p/w500" + data.poster : "https://via.placeholder.com/500x750?text=Нет+постера";
+                    const fullPoster = data.poster ? "https://image.tmdb.org/t/p/w500" + data.poster : "";
                     
-                    const img = document.getElementById('poster');
-                    img.src = posterPath;
-                    img.onload = () => { loader.style.display = 'none'; };
+                    posterImg.src = fullPoster;
+                    posterImg.onload = () => {
+                        posterImg.style.opacity = '1';
+                        posterBox.classList.remove('shimmer');
+                    };
                 }
             } catch (e) {
-                document.getElementById('title').innerText = "Ошибка сети";
-                loader.style.display = 'none';
+                document.getElementById('title').innerText = "Ошибка связи с ПК";
+                console.error(e);
             }
         }
 
-        async function vote(type) {
+        function vote(type) {
             tg.HapticFeedback.impactOccurred('medium');
-            
-            // Здесь можно добавить анимацию вылета карточки (swipe)
             const card = document.getElementById('card');
-            card.style.transform = type === 'like' ? 'translateX(200px) rotate(20deg)' : 'translateX(-200px) rotate(-20deg)';
+            
+            // Анимация улета
+            const x = type === 'like' ? 400 : -400;
+            const rotate = type === 'like' ? 30 : -30;
+            
+            card.style.transform = `translateX(${x}px) rotate(${rotate}deg)`;
             card.style.opacity = '0';
-
-            // Отправляем голос на сервер (если эндпоинт готов)
-            // fetch(`${API_BASE}/api/vote`, { method: 'POST', body: JSON.stringify({...}) });
 
             setTimeout(() => {
                 card.style.transform = 'none';
                 card.style.opacity = '1';
                 loadMovie();
-            }, 300);
+            }, 400);
         }
 
         loadMovie();
     </script>
 </body>
 </html>
-
