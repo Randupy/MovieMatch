@@ -169,8 +169,14 @@
             posterBox.classList.add('shimmer');
 
             try {
+                // Добавили cache: 'no-cache', чтобы данные всегда были свежими
                 const response = await fetch(`${API_BASE}/get_movie/${userId}`, {
-                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                    method: 'GET',
+                    cache: 'no-cache',
+                    headers: {
+                        'Bypass-Tunnel-Reminder': 'true',
+                        'bypass-tunnel-reminder': 'true' // на всякий случай в обоих регистрах
+                    }
                 });
                 const data = await response.json();
 
@@ -178,8 +184,7 @@
                     document.getElementById('title').innerText = data.title;
 
                     if (data.poster) {
-                        // Теперь мы просим картинку у НАШЕГО сервера, передавая путь в параметрах
-                        // Используем encodeURIComponent на случай странных символов
+                        // Важно: прокси-ссылка
                         const proxyUrl = `${API_BASE}/proxy_image?path=${encodeURIComponent(data.poster)}`;
                         posterImg.src = proxyUrl;
                     } else {
@@ -192,12 +197,12 @@
                     };
 
                     posterImg.onerror = () => {
-                        // Если даже через прокси не вышло
-                        document.getElementById('title').innerText = data.title + " (Ошибка загрузки)";
+                        document.getElementById('title').innerText = data.title + " (Ошибка постера)";
                         posterBox.classList.remove('shimmer');
                     };
                 }
             } catch (e) {
+                console.error("Fetch error:", e);
                 document.getElementById('title').innerText = "Ошибка связи с ПК";
                 posterBox.classList.remove('shimmer');
             }
@@ -225,4 +230,3 @@
     </script>
 </body>
 </html>
-
